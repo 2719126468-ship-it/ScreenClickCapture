@@ -7,17 +7,18 @@
     android:padding="24dp">
 
     <TextView
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:text="点击按钮后授权屏幕捕获，即可截取当前屏幕。截图会保存到应用外部图片目录。"
-        android:textSize="16sp" />
+        android:text="点击下方按钮 → 授予悬浮窗权限 → 授予截屏权限 → 屏幕上会出现一个红色圆点。\n\n切到任意应用，点红色圆点即可截屏。\n\n截图保存在应用外部图片目录。"
+        android:textSize="15sp"
+        android:lineSpacingExtra="4dp" />
 
     <Button
         android:id="@+id/captureButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
-        android:text="点击截屏" />
+        android:text="开始悬浮截屏" />
 
 </LinearLayout>
