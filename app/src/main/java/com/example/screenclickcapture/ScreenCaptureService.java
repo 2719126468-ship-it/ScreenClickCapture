@@ -9,6 +9,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.PixelFormat;
+import android.graphics.RectF;
 import android.hardware.display.DisplayManager;
 import android.hardware.display.VirtualDisplay;
 import android.media.Image;
@@ -38,6 +39,13 @@ public class ScreenCaptureService extends Service {
 
     private static final String CHANNEL_ID = "screen_capture_channel";
     private static final int NOTIFICATION_ID = 1001;
+
+    // ===== 外观参数，想改只改这里 =====
+    private static final int DP_SIZE = 56;              // 悬浮球直径
+    private static final int COLOR_BG = 0xF2FFFFFF;     // 球体背景（95% 白）
+    private static final int COLOR_ICON = 0xFF333333;   // 图标主色（深灰）
+    private static final int COLOR_LENS = 0xFFFFFFFF;   // 镜头内圈（白）
+    // =================================
 
     private MediaProjection projection;
     private WindowManager windowManager;
@@ -101,7 +109,7 @@ public class ScreenCaptureService extends Service {
             builder = new Notification.Builder(this);
         }
         builder.setContentTitle("悬浮截屏运行中")
-                .setContentText("点击屏幕上的红色圆点即可截屏")
+                .setContentText("点击屏幕上的圆形相机按钮即可截屏")
                 .setSmallIcon(android.R.drawable.ic_menu_camera)
                 .setOngoing(true);
         startForeground(NOTIFICATION_ID, builder.build());
@@ -113,24 +121,69 @@ public class ScreenCaptureService extends Service {
         }
 
         windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
+        final int sizePx = (int) (getResources().getDisplayMetrics().density * DP_SIZE);
 
         floatingView = new View(this) {
-            private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            private final Paint bgPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            private final Paint iconPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            private final Paint lensPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
             @Override
             protected void onDraw(Canvas canvas) {
                 super.onDraw(canvas);
-                paint.setColor(0xFFE53935);
-                canvas.drawCircle(getWidth() / 2f, getHeight() / 2f, getWidth() / 2f - 4, paint);
+
+                float cx = getWidth() / 2f;
+                float cy = getHeight() / 2f;
+                float r = Math.min(getWidth(), getHeight()) / 2f;
+
+                // 背景圆 + 阴影
+                bgPaint.setColor(COLOR_BG);
+                bgPaint.setStyle(Paint.Style.FILL);
+                bgPaint.setShadowLayer(r * 0.28f, 0, r * 0.10f, 0x55000000);
+                canvas.drawCircle(cx, cy, r - r * 0.10f, bgPaint);
+
+                // 相机机身
+                float iconW = r * 1.15f;
+                float iconH = r * 0.80f;
+                float left = cx - iconW / 2f;
+                float top = cy - iconH / 2f + r * 0.07f;
+                float right = cx + iconW / 2f;
+                float bottom = cy + iconH / 2f + r * 0.07f;
+
+                iconPaint.setColor(COLOR_ICON);
+                iconPaint.setStyle(Paint.Style.FILL);
+                RectF body = new RectF(left, top, right, bottom);
+                canvas.drawRoundRect(body, iconH * 0.22f, iconH * 0.22f, iconPaint);
+
+                // 顶部凸起
+                RectF bump = new RectF(
+                        cx - iconW * 0.20f,
+                        top - iconH * 0.16f,
+                        cx + iconW * 0.20f,
+                        top + iconH * 0.10f
+                );
+                canvas.drawRoundRect(bump, iconH * 0.06f, iconH * 0.06f, iconPaint);
+
+                // 镜头（白圈 + 深色内芯）
+                lensPaint.setColor(COLOR_LENS);
+                lensPaint.setStyle(Paint.Style.FILL);
+                canvas.drawCircle(cx, cy + r * 0.09f, iconH * 0.30f, lensPaint);
+
+                lensPaint.setColor(COLOR_ICON);
+                canvas.drawCircle(cx, cy + r * 0.09f, iconH * 0.19f, lensPaint);
             }
         };
+        floatingView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+        floatingView.setAlpha(0.92f);
 
         int type = Build.VERSION.SDK_INT >= 26
                 ? WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
                 : WindowManager.LayoutParams.TYPE_PHONE;
 
         floatingParams = new WindowManager.LayoutParams(
-                120, 120, type,
+                sizePx,
+                sizePx,
+                type,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
                 PixelFormat.TRANSLUCENT
         );
@@ -152,11 +205,12 @@ public class ScreenCaptureService extends Service {
                         startX = floatingParams.x;
                         startY = floatingParams.y;
                         moved = false;
+                        v.setAlpha(0.55f);
                         return true;
                     case MotionEvent.ACTION_MOVE:
                         int dx = (int) (event.getRawX() - downX);
                         int dy = (int) (event.getRawY() - downY);
-                        if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
+                        if (Math.abs(dx) > 8 || Math.abs(dy) > 8) {
                             moved = true;
                         }
                         floatingParams.x = startX + dx;
@@ -164,6 +218,8 @@ public class ScreenCaptureService extends Service {
                         windowManager.updateViewLayout(v, floatingParams);
                         return true;
                     case MotionEvent.ACTION_UP:
+                    case MotionEvent.ACTION_CANCEL:
+                        v.setAlpha(0.92f);
                         if (!moved) {
                             captureNow();
                         }
@@ -196,7 +252,7 @@ public class ScreenCaptureService extends Service {
             public void run() {
                 doCapture();
             }
-        }, 100);
+        }, 80);
     }
 
     private void doCapture() {
@@ -236,12 +292,10 @@ public class ScreenCaptureService extends Service {
 
                     Bitmap cropped = Bitmap.createBitmap(padded, 0, 0, width, height);
 
-                    File dir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-                    if (dir == null) {
-                        dir = getFilesDir();
-                    }
+                    File dir = Environment.getExternalStoragePublicDirectory(
+                            Environment.DIRECTORY_DOWNLOADS);
                     if (!dir.exists() && !dir.mkdirs()) {
-                        throw new Exception("无法创建保存目录");
+                        throw new Exception("无法创建 Download 目录");
                     }
 
                     String fileName = "screenshot_" +
@@ -252,7 +306,15 @@ public class ScreenCaptureService extends Service {
                     cropped.compress(Bitmap.CompressFormat.PNG, 100, fos);
                     fos.close();
 
-                    toast("已保存: " + output.getAbsolutePath());
+                    // 通知系统扫描，让相册 / 文件管理器立即可见
+                    android.media.MediaScannerConnection.scanFile(
+                            ScreenCaptureService.this,
+                            new String[]{output.getAbsolutePath()},
+                            new String[]{"image/png"},
+                            null
+                    );
+
+                    toast("已保存到 Download: " + output.getName());
                 } catch (Exception e) {
                     toast("截屏失败: " + e.getMessage());
                 } finally {
@@ -287,6 +349,7 @@ public class ScreenCaptureService extends Service {
             public void run() {
                 if (floatingView != null) {
                     floatingView.setVisibility(View.VISIBLE);
+                    floatingView.setAlpha(0.92f);
                 }
             }
         });

@@ -1,7 +1,9 @@
 package com.example.screenclickcapture;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.media.projection.MediaProjectionManager;
 import android.net.Uri;
 import android.os.Build;
@@ -12,8 +14,9 @@ import android.widget.Toast;
 
 public class MainActivity extends Activity {
 
-    private static final int REQ_OVERLAY = 100;
-    private static final int REQ_CAPTURE = 101;
+    private static final int REQ_STORAGE = 100;
+    private static final int REQ_OVERLAY = 101;
+    private static final int REQ_CAPTURE = 102;
 
     private MediaProjectionManager projectionManager;
 
@@ -29,6 +32,19 @@ public class MainActivity extends Activity {
     }
 
     private void startFlow() {
+        if (Build.VERSION.SDK_INT >= 23 &&
+                checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    REQ_STORAGE
+            );
+            return;
+        }
+        checkOverlayThenCapture();
+    }
+
+    private void checkOverlayThenCapture() {
         if (Build.VERSION.SDK_INT >= 23 && !Settings.canDrawOverlays(this)) {
             Intent intent = new Intent(
                     Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
@@ -45,6 +61,18 @@ public class MainActivity extends Activity {
                 projectionManager.createScreenCaptureIntent(),
                 REQ_CAPTURE
         );
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQ_STORAGE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                checkOverlayThenCapture();
+            } else {
+                Toast.makeText(this, "需要存储权限才能把截图保存到 Download", Toast.LENGTH_LONG).show();
+            }
+        }
     }
 
     @Override
