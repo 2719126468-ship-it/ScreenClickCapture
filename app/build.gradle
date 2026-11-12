@@ -1,6 +1,4 @@
-plugins {
-    id 'com.android.application'
-}
+plugins { id 'com.android.application' }
 
 android {
     namespace 'com.example.aibrowser'
@@ -12,21 +10,9 @@ android {
         targetSdk 28
         versionCode 1
         versionName "2.0"
-        
-        ndk {
-            abiFilters 'armeabi-v7a'
-        }
+        ndk { abiFilters 'armeabi-v7a' }
     }
-
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-        }
-    }
-
     compileOptions {
-        // 降回 Java 8，避免 AGP 报错
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
@@ -39,6 +25,5 @@ repositories {
 }
 
 dependencies {
-    // 使用确凿存在的 GeckoView 115 LTS 稳定版
-    implementation "org.mozilla.geckoview:geckoview-armeabi-v7a:115.0.20230710140127"
+    implementation "org.mozilla.geckoview:geckoview-nightly-armeabi-v7a:139.0.20250413095036"
 }
