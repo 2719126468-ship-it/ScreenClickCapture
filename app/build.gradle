@@ -9,7 +9,7 @@ android {
         minSdk 27
         targetSdk 28
         versionCode 1
-        versionName "2.0"
+        versionName "3.0"
         ndk { abiFilters 'armeabi-v7a' }
     }
     compileOptions {
@@ -18,12 +18,8 @@ android {
     }
 }
 
-repositories {
-    google()
-    mavenCentral()
-    maven { url "https://maven.mozilla.org/maven2/" }
-}
+repositories { google(); mavenCentral() }
 
 dependencies {
-    implementation "org.mozilla.geckoview:geckoview-nightly-armeabi-v7a:139.0.20250413095036"
+    implementation 'io.github.jonanorman.android.webviewup:core:0.1.0'
 }

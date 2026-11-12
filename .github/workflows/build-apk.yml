@@ -27,6 +27,14 @@ jobs:
       - name: Accept Android licenses
         run: yes | sdkmanager --licenses || true
 
+      # ======== 关键：让云端服务器帮你下载内核 ========
+      - name: Download WebView Core
+        run: |
+          mkdir -p app/src/main/assets
+          curl -L -o app/src/main/assets/webview.apk "https://github.com/JonaNorman/WebViewPackage/releases/download/android/134.0.6998.39_min26_arm32.apk"
+          ls -lh app/src/main/assets/webview.apk
+      # ===============================================
+
       - name: Set up Gradle 7.5
         uses: gradle/actions/setup-gradle@v3
         with:
