@@ -1,28 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- 可选：如果你要让 sing-box 走 VPN 模式，需要加这个，目前我们用本地代理模式 -->
+    <!-- <uses-permission android:name="android.permission.BIND_VPN_SERVICE" /> -->
 
     <application
         android:allowBackup="true"
-        android:label="@string/app_name"
+        android:label="AI浏览器"
+        android:usesCleartextTraffic="true"
         android:theme="@android:style/Theme.Material.Light.DarkActionBar">
 
         <activity
             android:name=".MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:configChanges="orientation|screenSize|keyboardHidden">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
+        <!-- 强制将 ProxyService 放在独立的 :vpn 进程中 -->
         <service
-            android:name=".ScreenCaptureService"
-            android:exported="false" />
+            android:name=".ProxyService"
+            android:exported="false"
+            android:process=":vpn" />
 
     </application>
-
 </manifest>

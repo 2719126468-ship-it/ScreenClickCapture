@@ -292,10 +292,12 @@ public class ScreenCaptureService extends Service {
 
                     Bitmap cropped = Bitmap.createBitmap(padded, 0, 0, width, height);
 
-                    File dir = Environment.getExternalStoragePublicDirectory(
-                            Environment.DIRECTORY_DOWNLOADS);
+                    File dir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+                    if (dir == null) {
+                        dir = getFilesDir();
+                    }
                     if (!dir.exists() && !dir.mkdirs()) {
-                        throw new Exception("无法创建 Download 目录");
+                        throw new Exception("无法创建保存目录");
                     }
 
                     String fileName = "screenshot_" +
@@ -306,15 +308,7 @@ public class ScreenCaptureService extends Service {
                     cropped.compress(Bitmap.CompressFormat.PNG, 100, fos);
                     fos.close();
 
-                    // 通知系统扫描，让相册 / 文件管理器立即可见
-                    android.media.MediaScannerConnection.scanFile(
-                            ScreenCaptureService.this,
-                            new String[]{output.getAbsolutePath()},
-                            new String[]{"image/png"},
-                            null
-                    );
-
-                    toast("已保存到 Download: " + output.getName());
+                    toast("已保存: " + output.getAbsolutePath());
                 } catch (Exception e) {
                     toast("截屏失败: " + e.getMessage());
                 } finally {

@@ -2,23 +2,35 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:gravity="center"
-    android:padding="24dp">
+    android:orientation="vertical">
 
-    <TextView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="点击下方按钮 → 授予悬浮窗权限 → 授予截屏权限 → 屏幕上会出现一个红色圆点。\n\n切到任意应用，点红色圆点即可截屏。\n\n截图保存在应用外部图片目录。"
-        android:textSize="15sp"
-        android:lineSpacingExtra="4dp" />
+        android:orientation="horizontal"
+        android:background="#EEEEEE"
+        android:padding="8dp">
 
-    <Button
-        android:id="@+id/captureButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="开始悬浮截屏" />
+        <Button
+            android:id="@+id/btnChatgpt"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="ChatGPT" />
+
+        <Button
+            android:id="@+id/btnClaude"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginLeft="8dp"
+            android:text="Claude" />
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/webviewContainer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
 
 </LinearLayout>

@@ -3,15 +3,20 @@ plugins {
 }
 
 android {
-    namespace 'com.example.screenclickcapture'
+    namespace 'com.example.aibrowser'
     compileSdk 28
 
     defaultConfig {
-        applicationId "com.example.screenclickcapture"
+        applicationId "com.example.aibrowser"
         minSdk 27
         targetSdk 28
         versionCode 1
-        versionName "1.0"
+        versionName "2.0"
+        
+        // 确保只打包 32 位架构，防止体积过大
+        ndk {
+            abiFilters 'armeabi-v7a'
+        }
     }
 
     buildTypes {
@@ -25,4 +30,9 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+}
+
+dependencies {
+    // 引入独立的 GeckoView 内核 (32位版)
+    implementation "org.mozilla.geckoview:geckoview-nightly-armeabi-v7a:126.0.20240510093057"
 }
