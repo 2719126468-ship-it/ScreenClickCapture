@@ -3,7 +3,6 @@ package com.example.aibrowser;
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
-import android.os.RemoteException;
 import android.util.Log;
 
 import java.io.File;
@@ -11,7 +10,6 @@ import java.io.FileOutputStream;
 
 public class ProxyService extends Service {
     private static final String TAG = "ProxyService";
-    private String proxyPort = "1080"; // 默认本地 SOCKS5 端口
 
     @Override
     public void onCreate() {
@@ -20,11 +18,10 @@ public class ProxyService extends Service {
     }
 
     @Override
-    public IBinder onBind(Intent intent) {
-        return new IAiProxy.Stub() {
-            @Override
-            public void startProxy(String configJson) throws RemoteException {
-                // 将配置写入本地
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        if (intent != null) {
+            String configJson = intent.getStringExtra("config");
+            if (configJson != null) {
                 try {
                     File configFile = new File(getFilesDir(), "config.json");
                     FileOutputStream fos = new FileOutputStream(configFile);
@@ -38,23 +35,19 @@ public class ProxyService extends Service {
                     Log.e(TAG, "Failed to start proxy", e);
                 }
             }
+        }
+        return START_STICKY;
+    }
 
-            @Override
-            public void stopProxy() throws RemoteException {
-                // TODO: BoxService.stop();
-                Log.i(TAG, "sing-box core stopped");
-            }
-
-            @Override
-            public String getProxyPort() throws RemoteException {
-                return proxyPort;
-            }
-        };
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
     }
 
     @Override
     public void onDestroy() {
         // TODO: BoxService.stop();
+        Log.i(TAG, "sing-box core stopped");
         super.onDestroy();
     }
 }
