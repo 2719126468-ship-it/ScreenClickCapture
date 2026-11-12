@@ -2,12 +2,12 @@ plugins { id 'com.android.application' }
 
 android {
     namespace 'com.example.aibrowser'
-    compileSdk 35   // WebViewUpgrade core 要求 compileSdk 35[reference:1]
+    compileSdk 35 // WebViewUpgrade 要求 35+
 
     defaultConfig {
         applicationId "com.example.aibrowser"
-        minSdk 27
-        targetSdk 28
+        minSdk 27 // 保持 27，兼容你的 Android 8.1 设备
+        targetSdk 33 // WebViewUpgrade 推荐 33+
         versionCode 1
         versionName "3.0"
         ndk { abiFilters 'armeabi-v7a' }
@@ -21,6 +21,8 @@ android {
 repositories { google(); mavenCentral() }
 
 dependencies {
-    // 注意 group ID 是 io.github.jonanorman:android-webviewup[reference:2][reference:3]
-    implementation 'io.github.jonanorman:android-webviewup:core:0.1.0'
+    // 官方正确坐标，并排除冲突的 appcompat 传递依赖
+    implementation('io.github.jonanorman.android.webviewup:core:0.1.0') {
+        exclude group: 'androidx.appcompat', module: 'appcompat'
+    }
 }
