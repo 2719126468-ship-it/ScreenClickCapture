@@ -13,7 +13,6 @@ android {
         versionCode 1
         versionName "2.0"
         
-        // 确保只打包 32 位架构，防止体积过大
         ndk {
             abiFilters 'armeabi-v7a'
         }
@@ -27,12 +26,19 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 }
 
+repositories {
+    google()
+    mavenCentral()
+    // 关键：加上 Mozilla 官方仓库
+    maven { url "https://maven.mozilla.org/maven2/" }
+}
+
 dependencies {
-    // 引入独立的 GeckoView 内核 (32位版)
-    implementation "org.mozilla.geckoview:geckoview-nightly-armeabi-v7a:126.0.20240510093057"
+    // 使用稳定版 GeckoView，并明确指定 32 位（armeabi-v7a）架构
+    implementation "org.mozilla.geckoview:geckoview-armeabi-v7a:126.0.20240510093057"
 }
